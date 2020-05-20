@@ -1,0 +1,41 @@
+service:
+  name: sls-ts
+# app and org for use with dashboard.serverless.com
+#app: your-app-name
+#org: your-org-name
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+  TodoTable:
+    arn: !GetAtt TodoTable.Arn
+    name: !Ref TodoTable
+
+# Add the serverless-webpack plugin
+plugins:
+  - serverless-webpack
+  - serverless-pseudo-parameters
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: ${opt:region, 'eu-central-1'}
+  stage: ${opt:stage, 'dev'}
+  apiGateway:
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+  iamRoleStatements:
+    - ${file(iam/TodoTable.yml):TodoTable}
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          method: get
+          path: hello
+
+resources:
+  Resources:
+    TodoTable: ${file(resources/TodoTable.yml):TodoTable}
